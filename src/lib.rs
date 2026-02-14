@@ -77,8 +77,13 @@ fn start_autoclicker(
     }
 
     // Validate trigger key
-    if !matches!(trigger_key.as_str(), "Alt" | "Shift" | "Ctrl") {
-        return Err("Invalid trigger key. Must be Alt, Shift, or Ctrl".to_string());
+    if !matches!(
+        trigger_key.as_str(),
+        "Alt" | "Shift" | "Ctrl" | "Command" | "Option"
+    ) {
+        return Err(
+            "Invalid trigger key. Must be Alt, Shift, Ctrl, Command, or Option".to_string(),
+        );
     }
 
     let clicker_state = AutoClickerState {
@@ -140,9 +145,10 @@ fn autoclicker_loop(running: Arc<AtomicBool>, state: Arc<Mutex<Option<AutoClicke
                     let state_guard = state.lock().unwrap();
                     if let Some(clicker_state) = &*state_guard {
                         let target_key = match clicker_state.trigger_key.as_str() {
-                            "Alt" => Some(Key::Alt),
+                            "Alt" | "Option" => Some(Key::Alt),
                             "Shift" => Some(Key::ShiftLeft),
                             "Ctrl" => Some(Key::ControlLeft),
+                            "Command" => Some(Key::MetaLeft),
                             _ => None,
                         };
 
@@ -151,7 +157,13 @@ fn autoclicker_loop(running: Arc<AtomicBool>, state: Arc<Mutex<Option<AutoClicke
                                 EventType::KeyPress(_key)
                                     if matches!(
                                         _key,
-                                        Key::Alt | Key::ShiftLeft | Key::ShiftRight | Key::ControlLeft | Key::ControlRight
+                                        Key::Alt
+                                            | Key::ShiftLeft
+                                            | Key::ShiftRight
+                                            | Key::ControlLeft
+                                            | Key::ControlRight
+                                            | Key::MetaLeft
+                                            | Key::MetaRight
                                     ) && is_key_match(_key, target) =>
                                 {
                                     key_held = true;
@@ -159,7 +171,13 @@ fn autoclicker_loop(running: Arc<AtomicBool>, state: Arc<Mutex<Option<AutoClicke
                                 EventType::KeyRelease(_key)
                                     if matches!(
                                         _key,
-                                        Key::Alt | Key::ShiftLeft | Key::ShiftRight | Key::ControlLeft | Key::ControlRight
+                                        Key::Alt
+                                            | Key::ShiftLeft
+                                            | Key::ShiftRight
+                                            | Key::ControlLeft
+                                            | Key::ControlRight
+                                            | Key::MetaLeft
+                                            | Key::MetaRight
                                     ) && is_key_match(_key, target) =>
                                 {
                                     key_held = false;
@@ -198,6 +216,7 @@ fn is_key_match(key: rdev::Key, target: rdev::Key) -> bool {
         Key::Alt => matches!(key, Key::Alt),
         Key::ShiftLeft => matches!(key, Key::ShiftLeft | Key::ShiftRight),
         Key::ControlLeft => matches!(key, Key::ControlLeft | Key::ControlRight),
+        Key::MetaLeft => matches!(key, Key::MetaLeft | Key::MetaRight),
         _ => false,
     }
 }

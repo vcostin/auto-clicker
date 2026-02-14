@@ -22,16 +22,16 @@
             <h2>Trigger Key</h2>
             <div class="radio-group">
                 <label class="radio-label">
-                    <input type="radio" name="triggerKey" value="Alt" checked>
-                    Alt
+                    <input type="radio" name="triggerKey" value="Option" data-win-value="Alt" checked>
+                    <span class="key-label" data-win-label="Alt" data-mac-label="Option">Alt</span>
                 </label>
                 <label class="radio-label">
                     <input type="radio" name="triggerKey" value="Shift">
-                    Shift
+                    <span class="key-label">Shift</span>
                 </label>
                 <label class="radio-label">
-                    <input type="radio" name="triggerKey" value="Ctrl">
-                    Ctrl
+                    <input type="radio" name="triggerKey" value="Command" data-win-value="Ctrl">
+                    <span class="key-label" data-win-label="Ctrl" data-mac-label="Command">Ctrl</span>
                 </label>
             </div>
         </div>
@@ -57,10 +57,33 @@
     <script type="module">
         const invoke = window.__TAURI_INTERNALS__.invoke;
 
+        // Detect platform and adjust UI
+        const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+
+        // Update key labels based on platform
+        document.addEventListener('DOMContentLoaded', () => {
+            const keyLabels = document.querySelectorAll('.key-label');
+            const keyInputs = document.querySelectorAll('input[name="triggerKey"]');
+
+            keyLabels.forEach(label => {
+                if (isMac && label.dataset.macLabel) {
+                    label.textContent = label.dataset.macLabel;
+                } else if (!isMac && label.dataset.winLabel) {
+                    label.textContent = label.dataset.winLabel;
+                }
+            });
+
+            keyInputs.forEach(input => {
+                if (!isMac && input.dataset.winValue) {
+                    input.value = input.dataset.winValue;
+                }
+            });
+        });
+
         let isRunning = false;
         let selectedWindow = '';
         let cpsValue = 10;
-        let triggerKey = 'Alt';
+        let triggerKey = isMac ? 'Option' : 'Alt';
 
         const refreshWindowsBtn = document.getElementById('refreshWindows');
         const windowSelect = document.getElementById('windowSelect');
