@@ -39,8 +39,8 @@
         <div class="section">
             <h2>Clicks Per Second</h2>
             <div class="cps-control">
-                <input type="range" id="cpsSlider" min="1" max="50" value="10" class="slider">
-                <input type="number" id="cpsValue" min="1" max="50" value="10" class="cps-input">
+                <input type="range" id="cpsSlider" min="1" max="100" value="10" class="slider">
+                <input type="number" id="cpsValue" min="1" max="100" value="10" class="cps-input">
             </div>
         </div>
 
@@ -142,7 +142,7 @@
             let value = parseInt(e.target.value);
             if (isNaN(value)) value = 1;
             if (value < 1) value = 1;
-            if (value > 50) value = 50;
+            if (value > 100) value = 100;
 
             cpsValue = value;
             cpsSlider.value = value;

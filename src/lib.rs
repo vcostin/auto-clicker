@@ -1,7 +1,7 @@
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::thread;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 mod platform;
 use platform::{Platform, PlatformOps};
@@ -16,7 +16,14 @@ struct AutoClickerState {
 struct AppState {
     running: Arc<AtomicBool>,
     state: Arc<Mutex<Option<AutoClickerState>>>,
+    last_command_time: Arc<Mutex<Option<Instant>>>,
 }
+
+// Constants for validation
+const MAX_CPS: u32 = 100;
+const MIN_CPS: u32 = 1;
+const MAX_WINDOW_TITLE_LENGTH: usize = 256;
+const RATE_LIMIT_MS: u128 = 500; // Minimum 500ms between commands
 
 #[tauri::command]
 fn get_windows() -> Result<Vec<String>, String> {
@@ -30,8 +37,48 @@ fn start_autoclicker(
     cps: u32,
     trigger_key: String,
 ) -> Result<(), String> {
+    // Rate limiting check
+    {
+        let mut last_time = state.last_command_time.lock().unwrap();
+        if let Some(last) = *last_time {
+            let elapsed = last.elapsed().as_millis();
+            if elapsed < RATE_LIMIT_MS {
+                return Err(format!(
+                    "Rate limit: Please wait {}ms between commands",
+                    RATE_LIMIT_MS - elapsed
+                ));
+            }
+        }
+        *last_time = Some(Instant::now());
+    }
+
+    // Check if already running
     if state.running.load(Ordering::SeqCst) {
         return Err("AutoClicker is already running".to_string());
+    }
+
+    // Input validation
+    if cps < MIN_CPS || cps > MAX_CPS {
+        return Err(format!(
+            "CPS must be between {} and {}",
+            MIN_CPS, MAX_CPS
+        ));
+    }
+
+    if window_title.is_empty() {
+        return Err("Window title cannot be empty".to_string());
+    }
+
+    if window_title.len() > MAX_WINDOW_TITLE_LENGTH {
+        return Err(format!(
+            "Window title too long (max {} characters)",
+            MAX_WINDOW_TITLE_LENGTH
+        ));
+    }
+
+    // Validate trigger key
+    if !matches!(trigger_key.as_str(), "Alt" | "Shift" | "Ctrl") {
+        return Err("Invalid trigger key. Must be Alt, Shift, or Ctrl".to_string());
     }
 
     let clicker_state = AutoClickerState {
@@ -162,6 +209,7 @@ pub fn run() {
         .manage(AppState {
             running: Arc::new(AtomicBool::new(false)),
             state: Arc::new(Mutex::new(None)),
+            last_command_time: Arc::new(Mutex::new(None)),
         })
         .invoke_handler(tauri::generate_handler![
             get_windows,
