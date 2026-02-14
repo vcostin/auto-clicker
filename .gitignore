@@ -1,0 +1,10 @@
+/target
+node_modules/
+dist/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Temporary Claude Code files
+tmpclaude-*

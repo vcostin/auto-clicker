@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoClicker</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>AutoClicker</h1>
+
+        <div class="section">
+            <h2>Target Window</h2>
+            <button id="refreshWindows" class="btn">Refresh Windows</button>
+            <select id="windowSelect" class="select">
+                <option value="">Select a window...</option>
+            </select>
+        </div>
+
+        <div class="section">
+            <h2>Trigger Key</h2>
+            <div class="radio-group">
+                <label class="radio-label">
+                    <input type="radio" name="triggerKey" value="Alt" checked>
+                    Alt
+                </label>
+                <label class="radio-label">
+                    <input type="radio" name="triggerKey" value="Shift">
+                    Shift
+                </label>
+                <label class="radio-label">
+                    <input type="radio" name="triggerKey" value="Ctrl">
+                    Ctrl
+                </label>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Clicks Per Second</h2>
+            <div class="cps-control">
+                <input type="range" id="cpsSlider" min="1" max="50" value="10" class="slider">
+                <input type="number" id="cpsValue" min="1" max="50" value="10" class="cps-input">
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Status</h2>
+            <div id="status" class="status">Inactive</div>
+            <p class="instruction">Hold the selected trigger key to activate auto-clicking</p>
+        </div>
+
+        <button id="startBtn" class="btn btn-primary">Start</button>
+        <button id="stopBtn" class="btn btn-danger" disabled>Stop</button>
+    </div>
+
+    <script type="module">
+        const invoke = window.__TAURI_INTERNALS__.invoke;
+
+        let isRunning = false;
+        let selectedWindow = '';
+        let cpsValue = 10;
+        let triggerKey = 'Alt';
+
+        const refreshWindowsBtn = document.getElementById('refreshWindows');
+        const windowSelect = document.getElementById('windowSelect');
+        const cpsSlider = document.getElementById('cpsSlider');
+        const cpsInput = document.getElementById('cpsValue');
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const statusDiv = document.getElementById('status');
+        const triggerKeyInputs = document.querySelectorAll('input[name="triggerKey"]');
+
+        async function refreshWindows() {
+            try {
+                const windows = await invoke('get_windows');
+                windowSelect.innerHTML = '<option value="">Select a window...</option>';
+
+                windows.forEach(window => {
+                    const option = document.createElement('option');
+                    option.value = window;
+                    option.textContent = window;
+                    windowSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Failed to get windows:', error);
+                alert('Failed to get windows: ' + error);
+            }
+        }
+
+        async function startAutoClicker() {
+            if (!selectedWindow) {
+                alert('Please select a target window first!');
+                return;
+            }
+
+            try {
+                await invoke('start_autoclicker', {
+                    windowTitle: selectedWindow,
+                    cps: cpsValue,
+                    triggerKey: triggerKey
+                });
+
+                isRunning = true;
+                startBtn.disabled = true;
+                stopBtn.disabled = false;
+                statusDiv.textContent = 'Waiting for trigger key...';
+                statusDiv.classList.add('active');
+            } catch (error) {
+                console.error('Failed to start autoclicker:', error);
+                alert('Failed to start autoclicker: ' + error);
+            }
+        }
+
+        async function stopAutoClicker() {
+            try {
+                await invoke('stop_autoclicker');
+
+                isRunning = false;
+                startBtn.disabled = false;
+                stopBtn.disabled = true;
+                statusDiv.textContent = 'Inactive';
+                statusDiv.classList.remove('active');
+            } catch (error) {
+                console.error('Failed to stop autoclicker:', error);
+                alert('Failed to stop autoclicker: ' + error);
+            }
+        }
+
+        refreshWindowsBtn.addEventListener('click', refreshWindows);
+
+        windowSelect.addEventListener('change', (e) => {
+            selectedWindow = e.target.value;
+        });
+
+        cpsSlider.addEventListener('input', (e) => {
+            cpsValue = parseInt(e.target.value);
+            cpsInput.value = cpsValue;
+        });
+
+        cpsInput.addEventListener('input', (e) => {
+            let value = parseInt(e.target.value);
+            if (isNaN(value)) value = 1;
+            if (value < 1) value = 1;
+            if (value > 50) value = 50;
+
+            cpsValue = value;
+            cpsSlider.value = value;
+            cpsInput.value = value;
+        });
+
+        triggerKeyInputs.forEach(input => {
+            input.addEventListener('change', (e) => {
+                if (e.target.checked) {
+                    triggerKey = e.target.value;
+                }
+            });
+        });
+
+        startBtn.addEventListener('click', startAutoClicker);
+        stopBtn.addEventListener('click', stopAutoClicker);
+
+        refreshWindows();
+    </script>
+</body>
+</html>

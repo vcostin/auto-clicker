@@ -1,0 +1,22 @@
+{
+  "productName": "AutoClicker",
+  "version": "0.1.0",
+  "identifier": "com.autoclicker.app",
+  "build": {
+    "frontendDist": "ui"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "AutoClicker",
+        "width": 500,
+        "height": 600,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  }
+}
