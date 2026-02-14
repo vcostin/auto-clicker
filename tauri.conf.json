@@ -9,8 +9,8 @@
     "windows": [
       {
         "title": "AutoClicker",
-        "width": 500,
-        "height": 600,
+        "width": 520,
+        "height": 680,
         "resizable": true,
         "fullscreen": false
       }
