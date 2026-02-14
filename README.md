@@ -5,7 +5,7 @@ A cross-platform autoclicker application built with Tauri 2 and Rust.
 ## Features
 
 - **Window Selection**: Choose which application window to target with auto-clicks
-- **Adjustable Click Speed**: Set clicks per second from 1 to 50 (default: 10)
+- **Adjustable Click Speed**: Set clicks per second from 1 to 100 (default: 10)
 - **Trigger Key Selection**: Choose between Alt, Shift, or Ctrl as the activation key
 - **Safe Operation**: Auto-clicks only activate when:
   - The trigger key is held down
@@ -97,10 +97,10 @@ cargo tauri dev
 
 ## Configuration
 
-The maximum CPS value (currently 50) can be changed:
+The maximum CPS value (currently 100) can be changed:
 
-- **Frontend**: `ui/index.html` - change the `max="50"` attribute on the slider
-- **Backend**: No changes needed, it accepts any CPS value from the frontend
+- **Frontend**: `ui/index.html` - change the `max="100"` attribute on the slider
+- **Backend**: `src/lib.rs` - change the `MAX_CPS` constant
 
 ## Technical Details
 
@@ -131,6 +131,10 @@ The maximum CPS value (currently 50) can be changed:
 - Holding the trigger key activates clicking, releasing it pauses
 - Always test with safe applications first
 - Some games and applications may detect and block autoclickers
+
+## Development
+
+This software was created with the assistance of AI.
 
 ## License
 
